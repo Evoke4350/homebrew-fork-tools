@@ -1,0 +1,39 @@
+# Docker Compose for testing
+# Usage: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - .:/app:ro
+    environment:
+      - NO_COLOR=1
+      - GITHUB_USERNAMES=testuser
+
+  shellcheck:
+    image: koalaman/shellcheck:stable
+    volumes:
+      - .:/src:ro
+    working_dir: /src
+    command: >
+      sh -c "
+      find . -name '*.sh' -not -path './.git/*' -not -path './tests/*' -not -path './_site/*' |
+      while read f; do
+        echo 'Checking: $f'
+        shellcheck -x '$$f' || exit 1
+      done
+      echo 'All shell files passed linting'
+      "
+
+  alpine:
+    image: alpine:3.19
+    volumes:
+      - .:/app:ro
+    working_dir: /app
+    command: >
+      sh -c "
+      apk add --no-cache bash git &&
+      bash -n *.sh &&
+      echo 'Alpine: Syntax check passed'
+      "

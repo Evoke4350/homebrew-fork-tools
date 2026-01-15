@@ -1,0 +1,9 @@
+# ShellCheck configuration for fork-tools
+
+# Disable specific warnings that don't apply
+disable=SC2001  # See if you can use ${variable//search/replace} instead
+disable=SC2016  # Expressions don't expand in single quotes
+disable=SC2034  # Variable appears unused (often used via eval/export/sourcing)
+disable=SC2086  # Double quote to prevent globbing and word splitting (intentional for arrays)
+disable=SC2129  # Consider using { cmd1; cmd2; } instead of ( cmd1; cmd2; )
+disable=SC2155  # Declare and assign separately (intentional one-liners)

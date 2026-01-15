@@ -1,0 +1,243 @@
+/* fork-tools custom styling */
+
+/* Dark mode variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fork-bg-primary: #0d1117;
+    --fork-bg-secondary: #161b22;
+    --fork-text-primary: #c9d1d9;
+    --fork-text-secondary: #8b949e;
+    --fork-accent: #58a6ff;
+    --fork-accent-hover: #79b8ff;
+    --fork-border: #30363d;
+    --fork-green: #3fb950;
+    --fork-red: #f85149;
+    --fork-yellow: #d29922;
+  }
+}
+
+/* Light mode variables */
+@media (prefers-color-scheme: light) {
+  :root {
+    --fork-bg-primary: #ffffff;
+    --fork-bg-secondary: #f6f8fa;
+    --fork-text-primary: #24292f;
+    --fork-text-secondary: #57606a;
+    --fork-accent: #0969da;
+    --fork-accent-hover: #218bff;
+    --fork-border: #d0d7de;
+    --fork-green: #1a7f37;
+    --fork-red: #cf222e;
+    --fork-yellow: #9a6700;
+  }
+}
+
+/* Hero section */
+.fork-hero {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, var(--fork-accent) 0%, #8b5cf6 100%);
+  border-radius: 12px;
+  margin: 2rem 0;
+  color: white;
+}
+
+.fork-subtitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.fork-description {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--fork-accent);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--fork-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--fork-accent);
+  border: 2px solid var(--fork-accent);
+}
+
+.btn-outline:hover {
+  background: var(--fork-accent);
+  color: white;
+}
+
+/* Code blocks */
+.highlight {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+
+.highlight pre {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--fork-bg-secondary);
+  border: 1px solid var(--fork-border);
+}
+
+/* Inline code */
+code {
+  background: var(--fork-bg-secondary);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table th,
+table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--fork-border);
+}
+
+table th {
+  background: var(--fork-bg-secondary);
+  font-weight: 600;
+}
+
+table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Footer */
+.fork-footer {
+  text-align: center;
+  padding: 3rem 1rem;
+  margin-top: 4rem;
+  border-top: 1px solid var(--fork-border);
+  color: var(--fork-text-secondary);
+}
+
+.fork-footer a {
+  color: var(--fork-accent);
+}
+
+/* Status icons */
+.status-icon {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+
+/* Callouts */
+.callout {
+  padding: 1rem 1.25rem;
+  border-left: 4px solid;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+.callout.note {
+  border-color: var(--fork-accent);
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.callout.tip {
+  border-color: var(--fork-green);
+  background: rgba(63, 185, 80, 0.1);
+}
+
+.callout.warning {
+  border-color: var(--fork-yellow);
+  background: rgba(210, 153, 34, 0.1);
+}
+
+.callout.important {
+  border-color: var(--fork-red);
+  background: rgba(248, 81, 73, 0.1);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid var(--fork-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--fork-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Installation tabs */
+.install-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--fork-border);
+}
+
+.install-tab {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.install-tab.active {
+  border-bottom-color: var(--fork-accent);
+  color: var(--fork-accent);
+}
+
+/* Animated gradient for hero */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.fork-hero {
+  background: linear-gradient(135deg, #58a6ff, #8b5cf6, #ec4899);
+  background-size: 200% 200%;
+  animation: gradient-shift 10s ease infinite;
+}

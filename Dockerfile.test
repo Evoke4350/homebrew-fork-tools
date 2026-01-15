@@ -1,0 +1,24 @@
+# Test container for fork-tools
+FROM alpine:latest
+
+# Install dependencies
+RUN apk add --no-cache \
+    bash \
+    bats \
+    git \
+    shellcheck \
+    curl \
+    jq
+
+# Set up test environment
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Run shellcheck linting first
+RUN shellcheck --version && \
+    find . -name "*.sh" -not -path "./.git/*" -not -path "./tests/*" -exec shellcheck -x {} +
+
+# Run BATS tests
+CMD ["bats", "-r", "tests/"]
