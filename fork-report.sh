@@ -56,6 +56,21 @@ setup_colors() {
     fi
 }
 
+# Gum integration (optional) - for glamorous progress output on stderr.
+# CRITICAL: this must NEVER write to stdout because the report body is stdout.
+# Progress is only shown when stderr is a TTY and the user hasn't opted out.
+setup_gum() {
+    HAS_GUM=0
+    if command -v gum >/dev/null 2>&1 \
+       && [[ -t 2 ]] \
+       && [[ -z "${NO_TUI:-}" ]] \
+       && [[ -z "${NO_COLOR:-}" ]] \
+       && [[ "$PLATFORM" != "windows" ]] \
+       && [[ "${TERM:-dumb}" != "dumb" ]]; then
+        HAS_GUM=1
+    fi
+}
+
 # Check if repo is a fork
 is_fork() {
     local origin_url="$1"
@@ -323,6 +338,7 @@ show_config() {
 _main() {
     detect_platform
     setup_colors
+    setup_gum
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -367,7 +383,11 @@ _main() {
 
     local total_scanned=0
 
-    echo -e "${BLUE}🔍 Scanning for repos...${NC}" >&2
+    if (( HAS_GUM )); then
+        gum style --foreground 39 --bold '🔍 Scanning for repos...' >&2
+    else
+        echo -e "${BLUE}🔍 Scanning for repos...${NC}" >&2
+    fi
 
     for base_dir in "${SEARCH_DIRS[@]}"; do
         [[ ! -d "$base_dir" ]] && continue
@@ -393,11 +413,23 @@ _main() {
     done
 
     local fork_count=${#REPO_NAMES[@]}
-    echo -e "\r${GREEN}✓${NC} Scanned $total_scanned repos, found $fork_count forks" >&2
-    echo "" >&2
+    if (( HAS_GUM )); then
+        # Clear the inline \r counter first, then render a styled summary.
+        printf '\r\033[K' >&2
+        gum style --foreground 42 --bold \
+            "✓ Scanned $total_scanned repos, found $fork_count forks" >&2
+        echo "" >&2
+    else
+        echo -e "\r${GREEN}✓${NC} Scanned $total_scanned repos, found $fork_count forks" >&2
+        echo "" >&2
+    fi
 
     if [[ $fork_count -eq 0 ]]; then
-        echo -e "${YELLOW}⚠️  No forks found!${NC}" >&2
+        if (( HAS_GUM )); then
+            gum style --foreground 214 '⚠️  No forks found!' >&2
+        else
+            echo -e "${YELLOW}⚠️  No forks found!${NC}" >&2
+        fi
         return 1
     fi
 

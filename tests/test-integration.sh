@@ -530,14 +530,19 @@ test_fork_report_empty() {
     local empty_search_dir="$TEST_BASE_DIR/empty-search"
     mkdir -p "$empty_search_dir"
 
-    # Run fork-report.sh on empty directory
+    # Run fork-report.sh on empty directory.
     cd "$empty_search_dir"
     local output
-    output=$(FORF_SEARCH_DIRS="$empty_search_dir" "$PROJECT_ROOT/fork-report.sh" 2>&1 || true)
-
-    # Should complete without error and report no forks
+    output=$(FORK_SEARCH_DIRS="$empty_search_dir" GITHUB_USERNAMES="nobody" \
+                "$PROJECT_ROOT/fork-report.sh" 2>&1 || true)
     cd "$TEST_BASE_DIR"
-    test_pass
+
+    # With no forks in the search path, fork-report should say so explicitly.
+    if echo "$output" | grep -q "No forks found"; then
+        test_pass
+    else
+        test_fail "Expected 'No forks found' in output, got: $output"
+    fi
 }
 
 # =============================================================================

@@ -73,7 +73,9 @@ FORK_SEARCH_DIRS="~/projects:~/work" fork-report
 
 ## fork-check
 
-Quick check for upstream updates on your forks.
+Quick check for upstream updates on your forks. If `REPOS` is not set,
+fork-check auto-discovers forks by scanning `FORK_SEARCH_DIRS` for git
+repositories that have an `upstream` remote configured.
 
 ### Synopsis
 
@@ -85,20 +87,31 @@ fork-check [watch_interval]
 
 | Argument | Description |
 |----------|-------------|
-| `watch_interval` | Optional: Check interval in seconds (watch mode) |
+| `watch_interval` | Optional: check interval in seconds (enables watch mode) |
 
 ### Environment Variables
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `REPOS` | string | List of repo paths to check |
-| `SOUND` | string | Notification sound (default: "default") |
+| `REPOS` | string | Space- or newline-separated list of repo paths to check. If unset, fork-check auto-discovers. |
+| `FORK_SEARCH_DIRS` | string | Colon-separated directories to scan when auto-discovering. Default: `$HOME:$HOME/dev:$HOME/projects:$HOME/src:$HOME/github:$HOME/work` |
+| `SOUND` | string | Notification sound (default: `default`) |
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| `0`  | Success (checks ran, regardless of how many forks were behind) |
+| `1`  | No forks to check — `REPOS` is empty and auto-discovery found nothing |
 
 ### Examples
 
 ```bash
-# One-time check
+# One-time check (auto-discovers forks)
 fork-check
+
+# Explicit repo list
+REPOS="$HOME/projects/my-fork $HOME/dev/other-fork" fork-check
 
 # Watch mode (every 5 minutes)
 fork-check 300
@@ -108,33 +121,38 @@ fork-check 300
 
 ## fork-watcher
 
-Auto-discover forks and watch for updates.
+Auto-discover forks and watch for updates. Scans a built-in list of
+common directories for repos with an `upstream` remote, then compares
+the local HEAD against the upstream HEAD after fetching.
 
 ### Synopsis
 
 ```bash
 fork-watcher [watch_interval]
+fork-watcher --list
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--list` | List all tracked forks |
+| `--list` | List all discovered forks and exit |
 
 ### Arguments
 
 | Argument | Description |
 |----------|-------------|
-| `watch_interval` | Check interval in seconds |
+| `watch_interval` | Optional: poll interval in seconds (enables watch mode) |
 
 ### Environment Variables
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `SEARCH_DIRS` | string[] | Directories to search for forks |
-| `NOTIFY_APP` | string | macOS app to open on notification click |
-| `SOUND` | string | Notification sound |
+| `SOUND` | string | Notification sound passed to `terminal-notifier` (default: `default`) |
+
+> **Note:** fork-watcher's search directories are currently hardcoded
+> inside the script. Configurable search paths and notification app
+> selection are planned; open an issue if you need them.
 
 ### Examples
 
