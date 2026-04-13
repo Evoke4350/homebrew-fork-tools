@@ -5,6 +5,19 @@ All notable changes to fork-tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Optional [Charmbracelet Gum](https://github.com/charmbracelet/gum) integration
+  for glamorous TUI output. Auto-detected at runtime; falls back to the existing
+  plain ANSI output when unavailable.
+  - `install.sh`: bordered banner, spinners during downloads, styled summary
+  - `fork-report.sh`: styled scan progress header and summary (stderr only —
+    stdout report is never touched)
+  - `fork-watcher.sh`: styled fork list and watch-mode header
+  - `fork-check.sh`: styled watch-mode header
+- `NO_TUI` environment variable to opt out of Gum styling even when installed.
+
 ## [1.0.0] - 2026-01-14
 
 ### Platform Support
@@ -17,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git 2.0+
 - (Optional) jq for JSON processing
 - (Optional) terminal-notifier for macOS notifications
+- (Optional) [gum](https://github.com/charmbracelet/gum) for glamorous TUI styling
 
 ### Test Coverage
 - 31 tests for fork-report.sh

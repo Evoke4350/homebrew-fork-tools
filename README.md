@@ -97,6 +97,35 @@ fork-watcher 300
 | `FORK_SEARCH_DIRS` | Colon-separated directories to search | `~:~/dev:~/projects:~/src` |
 | `GITHUB_TOKEN` | Optional GitHub token for API access | - |
 | `NO_COLOR` | Disable colored output | false |
+| `NO_TUI` | Disable [Gum](https://github.com/charmbracelet/gum) TUI styling even if installed | false |
+
+## Optional: Glamorous TUI (Gum)
+
+fork-tools auto-detects [Charmbracelet Gum](https://github.com/charmbracelet/gum)
+and uses it for fancier banners, spinners, and styled progress messages if
+present. It's completely optional — without Gum you get the same plain ANSI
+output as before.
+
+```bash
+# macOS / Linuxbrew
+brew install gum
+
+# Debian / Ubuntu
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+sudo apt update && sudo apt install gum
+```
+
+Gum is automatically disabled when:
+
+- `stdout` / `stderr` is not a terminal (piped output, cron, CI)
+- `NO_COLOR` or `NO_TUI` is set
+- `TERM=dumb`
+
+In `fork-report`, Gum output is strictly confined to `stderr`, so the Markdown
+or JSON report on `stdout` is always byte-for-byte identical whether or not
+Gum is installed — safe for piping into `jq`, `> file.md`, or `| glow`.
 
 ## Development
 

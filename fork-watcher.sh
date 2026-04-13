@@ -11,6 +11,17 @@ WATCH_INTERVAL="${1:-}"  # If provided, run in watch mode
 NOTIFY_APP="com.github.GitHub"  # Opens GitHub when notification clicked
 SOUND="default"
 
+# Gum integration (optional) - glamorous TUI output when gum is installed.
+# Falls back to plain text for non-interactive/NO_COLOR/NO_TUI environments.
+HAS_GUM=0
+if command -v gum >/dev/null 2>&1 \
+   && [[ -t 1 ]] \
+   && [[ -z "${NO_TUI:-}" ]] \
+   && [[ -z "${NO_COLOR:-}" ]] \
+   && [[ "${TERM:-dumb}" != "dumb" ]]; then
+    HAS_GUM=1
+fi
+
 # Array of your forks: "local_path upstream_url"
 # Add your forks here in format: "/path/to/repo|https://github.com/original/repo"
 REPOS=()
@@ -85,15 +96,27 @@ check_fork() {
 
 # Function to show all tracked forks
 list_forks() {
-    echo "📋 Tracked forks:"
+    if (( HAS_GUM )); then
+        gum style --foreground 39 --bold '📋 Tracked forks:'
+    else
+        echo "📋 Tracked forks:"
+    fi
     echo ""
     for repo in "${REPOS[@]}"; do
         IFS='|' read -r path upstream <<< "$repo"
         if [[ -d "$path" ]]; then
-            echo "  ✓ $(basename "$path")"
+            if (( HAS_GUM )); then
+                gum style --foreground 42 "  ✓ $(basename "$path")"
+            else
+                echo "  ✓ $(basename "$path")"
+            fi
             echo "    → $upstream"
         else
-            echo "  ✗ $(basename "$path") (not found)"
+            if (( HAS_GUM )); then
+                gum style --foreground 196 "  ✗ $(basename "$path") (not found)"
+            else
+                echo "  ✗ $(basename "$path") (not found)"
+            fi
         fi
     done
 }
@@ -105,11 +128,25 @@ main() {
         return
     fi
 
-    echo "🍴 Fork Watcher - Checking ${#REPOS[@]} fork(s)..."
+    if (( HAS_GUM )); then
+        gum style \
+            --border rounded \
+            --border-foreground 212 \
+            --padding "0 2" \
+            --bold \
+            "🍴 Fork Watcher - Checking ${#REPOS[@]} fork(s)..."
+    else
+        echo "🍴 Fork Watcher - Checking ${#REPOS[@]} fork(s)..."
+    fi
 
     if [[ -n "$WATCH_INTERVAL" ]]; then
-        echo "🔄 Watch mode: checking every $WATCH_INTERVAL seconds"
-        echo "Press Ctrl+C to stop"
+        if (( HAS_GUM )); then
+            gum style --foreground 39 "🔄 Watch mode: checking every $WATCH_INTERVAL seconds"
+            gum style --foreground 244 "Press Ctrl+C to stop"
+        else
+            echo "🔄 Watch mode: checking every $WATCH_INTERVAL seconds"
+            echo "Press Ctrl+C to stop"
+        fi
         echo ""
 
         while true; do

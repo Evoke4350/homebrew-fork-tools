@@ -17,6 +17,18 @@ else
     RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BOLD='' NC=''
 fi
 
+# Gum integration (optional) - for glamorous TUI output via Charmbracelet Gum.
+# Detect once at startup; fall back to plain text if unavailable.
+# Honors NO_COLOR, NO_TUI, TERM=dumb, and non-interactive stdout.
+HAS_GUM=0
+if command -v gum >/dev/null 2>&1 \
+   && [[ -t 1 ]] \
+   && [[ -z "${NO_TUI:-}" ]] \
+   && [[ -z "${NO_COLOR:-}" ]] \
+   && [[ "${TERM:-dumb}" != "dumb" ]]; then
+    HAS_GUM=1
+fi
+
 # Configuration
 REPO="Evoke4350/homebrew-fork-tools"
 VERSION="${FORK_TOOLS_VERSION:-main}"
@@ -25,13 +37,48 @@ INSTALL_DIR="${FORK_TOOLS_DIR:-$HOME/.local/bin}"
 mkdir -p "$INSTALL_DIR"
 
 # Functions
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_ok() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_err() { echo -e "${RED}[ERROR]${NC} $1"; }
+# Log helpers: prefer Gum-styled output when available, fall back to ANSI colors.
+log_info() {
+    if (( HAS_GUM )); then
+        gum style --foreground 39 "▸ $1"
+    else
+        echo -e "${BLUE}[INFO]${NC} $1"
+    fi
+}
+log_ok() {
+    if (( HAS_GUM )); then
+        gum style --foreground 42 --bold "✓ $1"
+    else
+        echo -e "${GREEN}[OK]${NC} $1"
+    fi
+}
+log_warn() {
+    if (( HAS_GUM )); then
+        gum style --foreground 214 "⚠ $1"
+    else
+        echo -e "${YELLOW}[WARN]${NC} $1"
+    fi
+}
+log_err() {
+    if (( HAS_GUM )); then
+        gum style --foreground 196 --bold "✗ $1"
+    else
+        echo -e "${RED}[ERROR]${NC} $1"
+    fi
+}
 
-# Header
-cat <<'EOF'
+# Header — Gum renders a bordered banner, otherwise fall back to ASCII art.
+if (( HAS_GUM )); then
+    gum style \
+        --border double \
+        --border-foreground 212 \
+        --padding "1 4" \
+        --margin "1 0" \
+        --align center \
+        --bold \
+        'fork-tools' 'Fork management for developers'
+else
+    cat <<'EOF'
      _____ _____ __  __          _____
     / ____|  __ \  \/  |   /\   / ____|
    | |    | |__) |\   / |  /  \ | |     ____
@@ -41,7 +88,8 @@ cat <<'EOF'
 
     Fork management for developers
 EOF
-echo ""
+    echo ""
+fi
 
 # Detect platform
 detect_platform() {
@@ -79,13 +127,25 @@ download_script() {
     local script="$1"
     local url="${BASE_URL}/${script}"
 
-    log_info "Downloading ${script}..."
-    if curl -fsSL "$url" -o "${INSTALL_DIR}/${script}" 2>/dev/null; then
-        chmod +x "${INSTALL_DIR}/${script}"
-        log_ok "Installed ${script}"
+    if (( HAS_GUM )); then
+        # Gum spinner shows progress while curl runs; its output is on stderr.
+        if gum spin --spinner dot --title "Downloading ${script}..." -- \
+            curl -fsSL "$url" -o "${INSTALL_DIR}/${script}"; then
+            chmod +x "${INSTALL_DIR}/${script}"
+            log_ok "Installed ${script}"
+        else
+            log_err "Failed to download ${script}"
+            return 1
+        fi
     else
-        log_err "Failed to download ${script}"
-        return 1
+        log_info "Downloading ${script}..."
+        if curl -fsSL "$url" -o "${INSTALL_DIR}/${script}" 2>/dev/null; then
+            chmod +x "${INSTALL_DIR}/${script}"
+            log_ok "Installed ${script}"
+        else
+            log_err "Failed to download ${script}"
+            return 1
+        fi
     fi
 }
 
@@ -157,18 +217,33 @@ main() {
 
     # Summary
     if [[ ${#failed[@]} -eq 0 ]]; then
-        echo -e "${BOLD}Installation complete!${NC}"
-        echo ""
-        echo "Try it:"
-        echo "  ${CYAN}fork-report --help${NC}"
-        echo ""
-        echo "Set your GitHub usernames:"
-        echo "  ${CYAN}export GITHUB_USERNAMES=\"yourname\"${NC}"
-        echo ""
-        echo "Generate a report:"
-        echo "  ${CYAN}fork-report > ~/fork-status.md${NC}"
-        echo ""
-        echo "Docs: https://evoke4350.github.io/homebrew-fork-tools"
+        if (( HAS_GUM )); then
+            gum style \
+                --border rounded \
+                --border-foreground 42 \
+                --padding "1 2" \
+                --margin "1 0" \
+                'Installation complete!' \
+                '' \
+                'Try it:       fork-report --help' \
+                'Configure:    export GITHUB_USERNAMES="yourname"' \
+                'Report:       fork-report > ~/fork-status.md' \
+                '' \
+                'Docs: https://evoke4350.github.io/homebrew-fork-tools'
+        else
+            echo -e "${BOLD}Installation complete!${NC}"
+            echo ""
+            echo "Try it:"
+            echo "  ${CYAN}fork-report --help${NC}"
+            echo ""
+            echo "Set your GitHub usernames:"
+            echo "  ${CYAN}export GITHUB_USERNAMES=\"yourname\"${NC}"
+            echo ""
+            echo "Generate a report:"
+            echo "  ${CYAN}fork-report > ~/fork-status.md${NC}"
+            echo ""
+            echo "Docs: https://evoke4350.github.io/homebrew-fork-tools"
+        fi
     else
         log_err "Some installations failed: ${failed[*]}"
         exit 1

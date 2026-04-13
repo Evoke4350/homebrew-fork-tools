@@ -15,6 +15,17 @@ SOUND="${SOUND:-default}"
 # Override with REPOS environment variable
 REPOS="${REPOS:-}"
 
+# Gum integration (optional) - glamorous TUI output when gum is installed.
+# Falls back to plain text for non-interactive/NO_COLOR/NO_TUI environments.
+HAS_GUM=0
+if command -v gum >/dev/null 2>&1 \
+   && [[ -t 1 ]] \
+   && [[ -z "${NO_TUI:-}" ]] \
+   && [[ -z "${NO_COLOR:-}" ]] \
+   && [[ "${TERM:-dumb}" != "dumb" ]]; then
+    HAS_GUM=1
+fi
+
 check_repo() {
     local repo="$1"
     local name=$(basename "$repo")
@@ -62,8 +73,17 @@ check_repo() {
 # Watch mode
 if [[ $# -gt 0 && "$1" =~ ^[0-9]+$ ]]; then
     INTERVAL="$1"
-    echo "🔄 Watching ${REPOS//$'\n'/ } for updates every ${INTERVAL}s..."
-    echo "Press Ctrl+C to stop"
+    if (( HAS_GUM )); then
+        gum style \
+            --border rounded \
+            --border-foreground 212 \
+            --padding "0 2" \
+            "🔄 Watching ${REPOS//$'\n'/ } for updates every ${INTERVAL}s..." \
+            "Press Ctrl+C to stop"
+    else
+        echo "🔄 Watching ${REPOS//$'\n'/ } for updates every ${INTERVAL}s..."
+        echo "Press Ctrl+C to stop"
+    fi
     echo ""
 
     while true; do
