@@ -62,17 +62,25 @@ check_fork() {
 
     cd "$repo_path" 2>/dev/null || return
 
-    # Fetch upstream without merging
-    # Prefer upstream remote, fall back to origin
-    UPSTREAM_NAME=$(git remote get-name upstream 2>/dev/null || git remote get-name origin 2>/dev/null || echo "origin")
+    # Prefer upstream remote, fall back to origin.
+    # Note: "git remote get-name" is NOT a real git subcommand; the correct
+    # way to check remote existence is to look it up with git remote get-url.
+    if git remote get-url upstream >/dev/null 2>&1; then
+        UPSTREAM_NAME="upstream"
+    else
+        UPSTREAM_NAME="origin"
+    fi
 
-    # Get local and remote refs
+    # Fetch the remote so local tracking refs are current, then compare.
+    # Without this, HEAD..<remote>/HEAD would use stale refs.
+    git fetch --quiet "$UPSTREAM_NAME" 2>/dev/null || return
+
     LOCAL=$(git rev-parse HEAD 2>/dev/null)
-    REMOTE=$(git ls-remote "$UPSTREAM_NAME" HEAD 2>/dev/null | awk '{print $1}')
+    REMOTE=$(git rev-parse "${UPSTREAM_NAME}/HEAD" 2>/dev/null || echo "")
 
-    if [[ "$LOCAL" != "$REMOTE" ]]; then
-        # Get commit count difference
-        AHEAD=$(git rev-list --count "HEAD..$UPSTREAM_NAME/HEAD" 2>/dev/null || echo "?")
+    if [[ -n "$REMOTE" && "$LOCAL" != "$REMOTE" ]]; then
+        # Get commit count difference (how many commits upstream has that we don't).
+        AHEAD=$(git rev-list --count "HEAD..${UPSTREAM_NAME}/HEAD" 2>/dev/null || echo "?")
 
         if [[ "$AHEAD" != "0" && "$AHEAD" != "?" ]]; then
             local message="$repo_name: $AHEAD new commit(s) available"

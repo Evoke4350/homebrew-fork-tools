@@ -301,7 +301,8 @@ fork-report | grep "⬇️" && echo "⚠️  Upstream updates available!"
 ### v1.0.0 (2026-01-14)
 
 - Initial stable release
-- 176 tests passing (100% coverage)
+- 163 bats unit tests for `fork-report` and `fork-watcher`, plus 8 behavior
+  tests for `fork-check` and 25 integration tests
 - JSON output with full escaping for control characters
 - Cross-platform support (macOS, Linux, Windows Git Bash)
 - Docker test infrastructure

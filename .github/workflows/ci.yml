@@ -124,15 +124,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run security scan
+      - name: Scan tracked shell scripts for hard-coded secrets
         run: |
-          # Check for secrets
-          git log --all --full-history --source -- "*sh" | \
-            grep -i "password\|secret\|token\|api_key\|private_key" || true
+          set -e
+          # Files we want to inspect: top-level shell scripts + install.sh
+          scripts=( fork-report.sh fork-check.sh fork-watcher.sh install.sh )
 
-          # Check for eval/eval-like patterns
-          grep -rn "eval\|exec.*\$$" *.sh || true
+          # Secret patterns. Word boundaries / context avoid matching docs like
+          # "GITHUB_TOKEN environment variable". We only flag assignments.
+          patterns=(
+            '(password|passwd|pwd)[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']+'
+            '(secret|api[_-]?key)[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']+'
+            'ghp_[A-Za-z0-9]{20,}'
+            'github_pat_[A-Za-z0-9_]{20,}'
+            '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+          )
+
+          found=0
+          for script in "${scripts[@]}"; do
+            [[ -f "$script" ]] || continue
+            for p in "${patterns[@]}"; do
+              # -e + -- so patterns starting with '-' aren't parsed as flags
+              if grep -En -e "$p" -- "$script"; then
+                echo "::error file=$script::Possible hard-coded secret matching /$p/"
+                found=1
+              fi
+            done
+          done
+
+          if [[ $found -ne 0 ]]; then
+            echo "Security scan found potential secrets. Review above."
+            exit 1
+          fi
+          echo "✓ No hard-coded secrets detected in shell scripts."
+
+      - name: Flag unsafe eval / command-substitution patterns
+        run: |
+          set -e
+          # eval on user input is the primary concern; an `eval` with only a
+          # literal string is still worth reviewing, so we flag all occurrences.
+          # Output is informational and does not fail the build.
+          if grep -En '(^|[^a-zA-Z_])eval[[:space:]]' \
+                fork-report.sh fork-check.sh fork-watcher.sh install.sh 2>/dev/null; then
+            echo "::warning::Found 'eval' usage above — review for user-controlled input."
+          else
+            echo "✓ No 'eval' usage in shell scripts."
+          fi
 
   # Build status check
   status:
